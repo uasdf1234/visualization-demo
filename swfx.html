@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>互联网上网服务营业场所上网人员查询</title>
+        <link rel="stylesheet" type="text/css" href="assets/css/font-awesome.min.css">
+        <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
+        <style>
+            body{
+                font-family: "Helvetica Neue","Segoe UI",Tahoma,Arial,"Hiragino Sans GB",STHeiti,"Microsoft Yahei","WenQuanYi Micro Hei",sans-serif;
+                margin-top: 20px;
+            }
+            .sample{
+                line-height: 40px;
+            }
+            .green.btn {
+                color: #FFFFFF;
+                background-color: #26a69a;
+            }
+            .green.btn:hover {
+                color: #FFFFFF;
+                background-color: #1f897f;
+            }
+            .form-control {
+                font-size: 14px;
+                font-weight: normal;
+                color: #333;
+                background-color: #fff;
+                border: 1px solid #e5e5e5;
+                box-shadow: none;
+                transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+                -webkit-border-radius: 4px;
+                -moz-border-radius: 4px;
+                -ms-border-radius: 4px;
+                -o-border-radius: 4px;
+                border-radius: 4px;
+            }
+        </style>
+    </head>
+    <body>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-9 col-md-9 col-sm-9">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="sfzh" placeholder="输入身份证号查询"/>
+                    <span class="input-group-btn">
+                        <a href="javascript:;" class="btn green" id="username1_checker">
+                        <i class="fa fa-search"></i> 搜索 </a>
+                    </span>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-3 col-sm-3">
+                <a href="javascript:void(0)" onclick="document.getElementById('sfzh').value='511121195501234567';" class="sample">样例:511121195501234567</a>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <div id="mainMap" style="height:500px;border:0px solid #ccc;padding:10px;"></div>
+            </div>
+        </div>
+    </div>
+        <script src="assets/plugins/echarts/echarts.js"></script>
+        <script src="assets/plugins/jquery.js"></script>
+        <script src="data/geoCoord.js"></script>
+        <script type="text/javascript">
+            var fontFamily = '"Helvetica Neue","Segoe UI",Tahoma,Arial,"Hiragino Sans GB",STHeiti,"Microsoft Yahei","WenQuanYi Micro Hei",sans-serif';
+            var areaArr = ["地址区划","高新区","武侯区","锦江区","成华区","金牛区"];
+            var formatTime = function(time){
+                return time;//time.substring(5,16);
+            };
+            require.config({
+                paths: {
+                    echarts: 'assets/plugins/echarts'
+                }
+            });
+            require(
+                [
+                    'echarts',
+                    'echarts/chart/scatter'
+                ],
+                function (ec) {
+                    var chart = ec.init(document.getElementById('mainMap'));
+                    chart.setOption({
+    title : {
+        text : '互联网上网服务营业场所上网人员记录',
+        x : 'center'
+    },
+    tooltip : {
+        trigger: 'item',
+        backgroundColor:"#fff",
+        borderColor:"#ccc",
+        textStyle:{
+            color:'#42CAB2',
+            lineHeight:'25px'
+        },
+        enterable:true,
+        padding:[10,5,0,5],
+        borderWidth:1,
+        axisPointer:{
+            type:'none'
+        }
+    },
+    dataZoom: {
+        show: true,
+        start : 0,
+        end : 100
+    },
+    grid: {
+        y2: 80,
+        borderWidth:0,
+        borderColor:'#000'
+    },
+    dataRange: {
+        min: 0,
+        max: 24,
+        orient: 'horizontal',
+        y: 10,
+        calculable:true,
+        x: 'left',
+        precision : 0,
+        //text:['高','低'],           // 文本，默认为数值文本
+        splitNumber: 5,
+        text: ['上网时长','(小时)'],
+        textStyle:{
+            fontFamily:fontFamily
+        },
+        color: ['green','yellow','orangered']
+    },
+    xAxis : [
+        {
+            type : 'time',
+            axisLine : {
+                show:false,
+                lineStyle:{
+                    show:false
+                }
+            },
+            splitLine:{
+                lineStyle:{
+                    color:'#ADD1F1'
+                }
+            },
+            splitNumber:10
+        }
+    ],
+    yAxis : [
+        {
+            type : 'value',
+            nameTextStyle : {
+            },
+            axisLine : {
+                show: false,
+                lineStyle:{
+                    color:'#D9EDF7'
+                }
+            },
+            splitLine:{
+                lineStyle:{
+                    color:'#ADD1F1'
+                }
+            },
+            axisLabel : {
+                textStyle:{
+                    fontFamily:fontFamily
+                },
+                formatter: function(param){
+                    return areaArr[param];
+                }
+            }
+        }
+    ],
+    animation: true,
+    series : [
+        {
+            name:'series1',
+            type:'scatter',
+            tooltip : {
+                trigger: 'axis',
+                formatter : function (params) {
+                    var v = params.value[3];
+                    return '<p><i class="fa fa-at fa-fw"></i>'+ v.DD + '('+ v.WBBH +  ')</p>'
+                        + '<p><i class="fa fa-map-marker fa-fw"></i>' + v.DZ + '</p>'
+                        + '<p><i class="fa fa-clock-o fa-fw"></i>' 
+                        + formatTime(v.KSSJ) 
+                        + '&nbsp;&nbsp;<i class="fa fa-arrows-h"></i>&nbsp;&nbsp;' 
+                        + formatTime(v.JSSJ) 
+                        + '(共'+params.value[2]+'小时)'
+                        + '</p>'; 
+                    }
+            },
+            symbolSize: function (value){
+                return Math.round(value[2]);
+            },
+            data: (function () {
+                var o = {
+                            "DZQHOOO": "510124",
+                            "KSSJ": "2014-04-05 22:42:11",
+                            "ZJLX": "居民身份证",
+                            "WBBH": "51012410000102",
+                            "ZJHM": "510724198809260014",
+                            "DZ": "四川-成都-郫县郫筒南街135号",
+                            "FZJGMC": "安县公安局",
+                            "XM": "李佳儒",
+                            "JSSJ": "2014-04-06 03:06:25",
+                            "DZQH": "四川省成都市郫县",
+                            "WZ": "a15",
+                            "DD": "郫县部落网络时空网吧",
+                            "GJDM": "中国"
+                        };
+                var d = [];
+                var len = 0;
+                var now = new Date();
+                var value;
+                while (len++ < 24) {
+                    var sdate = new Date(2015, 8, 1, 0, Math.round(Math.random()*10000)),
+                        time = (len == 1 ? 1: Math.random()*24),
+                        edate = new Date(+sdate + time*3600000),
+                        dzqh = (len == 1 ? 0 : (Math.floor(Math.random()*5)+1)),
+                        obj = $.extend({},o,{
+                            KSSJ: sdate.format("MM-dd hh:mm"),
+                            JSSJ: edate.format("MM-dd hh:mm"),
+                            DZQH: "四川省成都市" + areaArr[dzqh]
+                        });
+                    d.push([
+                        sdate,
+                        dzqh,
+                        time.toFixed(2),
+                        obj
+                    ]);
+                }
+                return d;
+            })()
+        }
+    ]});
+        $.getJSON("data/swry.json",function(data){});
+                }
+            );
+
+Date.prototype.format = function (fmt) {
+    if(!fmt) fmt = "yyyy-MM-dd hh:mm:ss";
+    var o = {
+        "M+": this.getMonth() + 1, //月份 
+        "d+": this.getDate(), //日 
+        "h+": this.getHours(), //小时 
+        "m+": this.getMinutes(), //分 
+        "s+": this.getSeconds(), //秒 
+        "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
+        "S": this.getMilliseconds() //毫秒 
+    };
+    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+    for (var k in o)
+    if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+    return fmt;
+}
+        </script>
+    </body>
+</html>

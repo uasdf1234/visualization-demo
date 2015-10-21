@@ -1,0 +1,32 @@
+[
+	{
+		"node":{
+			"type":"H",
+			"x":100,
+			"y":200,
+			"color":"green",
+			"id":1
+		},
+		"relations":[
+			{"id":4,"status":"processing"}
+		]
+	},{
+		"node":{
+			"type":"C",
+			"color":"blue",
+			"id":2
+		}
+	},{
+		"node":{
+			"type":"D",
+			"color":"yellow",
+			"id":3
+		}
+	},{
+		"node":{
+			"type":"S",
+			"color":"oranged",
+			"id":4
+		}
+	}
+]

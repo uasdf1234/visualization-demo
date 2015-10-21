@@ -1,0 +1,151 @@
+
+body
+{
+  margin: 0;
+  padding: 0;
+  font-family: "Microsoft YaHei", Verdana, sans-serif, "SimSun";
+  font-size: 16px;
+  font-weight: 400;
+  background-color: rgb(241, 236, 248);
+}
+
+.score {
+  font-size:20px;
+  font-weight: bold;
+  font-style: normal;
+}
+
+.bg1 {
+  width: 100%;
+  position: absolute;
+  top: 0;
+  right: 0;
+  opacity: 0.5;
+}
+
+.bg2 {
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+@keyframes fill {
+    from {
+        stroke: black;
+        stroke-opacity: 0.1;
+    }
+    to {
+        stroke: teal;
+        stroke-opacity: 1;
+    }
+}
+
+rect {
+    fill: black;
+    animation-name: fill;
+    animation-duration: 3s;
+}
+
+.line {
+    stroke : #EF4836;;
+}
+.line.processing{
+    animation-name: fill;
+    animation-duration: 500ms;
+    animation-iteration-count: infinite;
+    background: black;
+}
+.statuse{
+  transition: all 10s linear;
+}
+#box {
+}
+
+#landing {
+  position: relative;
+}
+
+.nodelabel {
+  opacity: 1;
+  font-family: "Microsoft YaHei", Verdana, sans-serif, "SimSun";
+  font-size:10px;
+  font-weight: bold;
+  opacity:0.8;
+  pointer-events:none;
+  text-anchor: middle;
+}
+.nodelabel.C{
+  fill:#26C281;
+}.nodelabel.S{
+  fill:#EF4836;
+}.nodelabel.H{
+  fill:#0B81F9;
+}.nodelabel.D{
+  fill:#FD850C;
+}
+.node{
+  opacity:1;
+  stroke-opacity:1;
+  fill: #fff;
+  stroke-width:2px;
+}
+.node.C{
+  stroke:#26C281;
+}.node.S{
+  stroke:#EF4836;
+}.node.H{
+  stroke:#0B81F9;
+}.node.D{
+  stroke:#FD850C;
+}
+span {
+  font-style: italic
+}
+
+h3 {
+  margin-top:5px;
+  margin-bottom:5px;
+}
+.panel-group .panel-heading{
+  background-size: 22px;
+  background-repeat: no-repeat;
+  background-position: left center;
+  padding-left: 26px;
+}
+#headingC{
+  background-image: url(../images/c.png)
+}#headingH{
+  background-image: url(../images/h.png)
+}#headingS{
+  background-image: url(../images/s.png)
+}
+
+.md .md-head{
+  background-color: rgba(197, 197, 197, 0.15);
+    padding: 5px;
+    cursor: pointer;
+    border-left: 3px solid;
+}
+.md .md-head .fa:hover{
+  font-size:20px;
+}
+.md .md-body{
+  padding: 10px;
+    font-style: italic;
+}
+.md .md-body.disabled{
+  display: none;
+}
+.md.C .md-head{
+  color:#26C281;
+}.md.S .md-head{
+  color:#EF4836;;
+}.md.H .md-head{
+  color:#0B81F9;
+}.md.D .md-head{
+  color:#FD850C;
+}
+
+.md.disabled .md-head{
+  color:gray !important;
+}

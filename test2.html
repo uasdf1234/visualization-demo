@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <script src="assets/plugins/d3.min.js"></script>
+        <script src="assets/plugins/jquery.js"></script>
+        <link rel="stylesheet" href="assets/css/app.css" type="text/css">
+        <style>
+            
+            svg{
+                width:1000px;
+                height:600px;
+                transform-origin: 100% 100% 0px; !important;
+            }
+            circle{
+                z-index: 2
+            }
+            line{
+                z-index: 1
+            }
+        </style>
+    </head>
+    <body>
+        <script>
+        //I define these here so they carry between functions - not really necessary in this jsfiddle probably
+         var w = 1024,
+            h = 768,
+            r = 10;
+            var color = d3.scale.category10();
+        //make up my node object
+        window.nodeArray = [];
+        window.linkArray = [];
+        window.vis = d3.select("body")
+            .append("svg:svg")
+            .attr("pointer-events", "all")
+            //.append('svg:g')
+        var link = vis.append('svg:g').attr("id","link").selectAll(".link");
+        var node = vis.append('svg:g').attr("id","node").selectAll(".node");
+        // link = vis.select("#link").selectAll(".link");
+        // node = vis.select("#node").selectAll(".node");
+        //create the objects and run it
+        
+
+        var idToNode = {};
+        var idpairToLink = {};
+        function induceNetwork(data) {
+            var nodes = [];
+            data.forEach(function (p) {
+                var node = { links: [], id: p.node.id, skip: false };
+                node.attr = p.node;
+                if(!idToNode[node.id]){
+                    idToNode[node.id] = node;
+                    nodes.push(node);
+                }
+            });
+
+            // map a link to a link object
+            for (var i = 0; i < data.length; i++) {
+                var ev = data[i];
+                if(ev.relations && ev.relations.length){
+                    var aid = ev.node.id;
+                    for (var j = 0; j < ev.relations.length; j++) {
+                        var b = ev.relations[j], bid = b.id;
+                        if (!(bid in idToNode) || bid === aid)
+                            continue;
+                        var key = Math.min(aid,bid) + '_' + Math.max(aid,bid);
+                        if (!(key in idpairToLink)) {
+                            var link = { id:key, source: idToNode[aid], target: idToNode[bid], attr: { name: [b.name],weight: 1 }, skip: false };
+                            idpairToLink[key] = link;
+                        }
+                    }
+                }
+            }
+            var links = [];
+            for (var idpair in idpairToLink) {
+                links.push(idpairToLink[idpair]);
+            }
+            return { nodes: nodes, links: links };
+        };
+
+        d3.json("data/getnodes.json", function (error, data) {
+            console.log("done setting up the db");
+            var gragh = induceNetwork(data);
+            linkArray = linkArray.concat(gragh.links);
+            nodeArray = nodeArray.concat(gragh.nodes);
+
+            window.force = d3.layout.force()
+            .friction("0.7")
+            .gravity(function (d, i) {
+                if (d.class == "link reallink") {
+                    return "0.95";
+                } else {
+                    return "0.1";
+                }
+            })
+            .charge(function (d, i) {
+                if (d.class == "link reallink") {
+                    return "-1500";
+                } else {
+                    return "-300";
+                }
+            })
+            .linkDistance(function (d) {
+                if (d.class == "link reallink") {
+                    return "120";
+                } else {
+                    return "150";
+                }
+            })
+            .linkStrength(function (d) {
+                if (d.class == "link reallink") {
+                    return "8";
+                } else {
+                    return "6";
+                }
+            })
+            .size([1000,600])
+            .nodes(nodeArray)
+            .links(linkArray)
+            .on("tick", tick);
+            draw();
+            startCheck();
+        });
+
+function findTarget(nodes,link){
+    var o = {};
+    nodes.forEach(function(node){
+        if(node.id === link.sid){
+            o.source = node;
+        }else if(node.id === link.tid){
+            o.target = node;
+        }else if(o.source && o.target){
+            return false;
+        }
+    })
+    return o;
+}
+// slider where users selects time-sliced view of the data
+var findLinkIndexById = function(id){
+    var index = -1;
+    linkArray.forEach(function(l,i){
+        if(l.id === id){
+            index = i;
+            return false;
+        }
+    })
+    return index;
+}
+var startCheck = function () {
+    setTimeout(function(){
+        d3.json("data/getlinks.json", function (error, data) {
+            console.log("checking...");
+            // var links = VMail.Graph.induceLinks(data);
+            // links.length && App.viz.drawLinks(links);
+            var nodes = nodeArray,newLinks = [],redraw = false;
+            data.links && data.links.forEach(function(link){
+                var o = findTarget(nodes,link),id = link.sid+"_"+link.tid;
+                var newLink = $.extend({attr:{weight:1,status:link.status},id:id,skip:false},o);
+                if (!(id in idpairToLink)) {
+                    linkArray.push(newLink);
+                    idpairToLink[id]=newLink;
+                    redraw = true;
+                }else if(idpairToLink[id].attr.status != link.status){
+                    // var $tar = $("#"+id);
+                    // $tar[0].className = "line";
+                    // $tar.addClass(link.status);
+                    idpairToLink[id]=newLink;
+                    linkArray.splice(findLinkIndexById(id),1);
+                    draw();
+                    linkArray.push(newLink);
+                    redraw = true;
+                    // draw();
+                }
+            })
+            //linkArray.length = 0;
+            // console.log(App.viz.force.links())
+            // console.log(App.viz.force.nodes())
+            //App.viz.drawLinks();
+            if(redraw)
+                draw();
+            // updateNetwork(null,data);
+            startCheck();
+        });
+    },3000);
+};
+
+        //wait 5 seconds then update the diagram TO ADD A NODE
+        function draw() {
+            console.log("draw")
+            node = node.data(force.nodes(), function(d) { return d.id;});
+            link = link.data(force.links(), function(d) { 
+console.log(d);
+                return d.source.id + "-" + d.target.id; });
+            //create the link object using the links object in the json
+            //link = vis.selectAll("line").data(linkArray);
+            link.enter().insert("line")
+                .attr("class",function(link){
+                        console.log(link)
+                        return "line " + (link.attr.status||"");
+                    }).attr("id", function (link) {
+                        return link.id;
+                    })
+                    .attr("stroke-opacity", function(link){
+                        return link.attr.status ? ".5" : ".2";
+                    })
+                    .attr("stroke-width", function (link) {
+                        return 1;
+                    });
+            //node = vis.selectAll("g").data(nodeArray);
+            var g = node.enter().append("svg:g")
+                .attr("class", function (d) {
+                return d.class
+            })
+                .attr("id", function (d) {
+                return d.id
+            })
+                .call(force.drag);
+            //append to each node an svg circle element
+            //vis.selectAll(".realnode").filter(function (d) {return d.added;})
+                g.append("svg:circle")
+                .attr("r", function (node) {
+                    return 20;
+                }).attr("stroke", function (node) {
+                    return color(node.attr.color);
+                }).style("opacity", "1").attr("fill","#fff")
+                .attr("stroke-opacity", 1).attr("stroke-width", 1.0);
+
+            //append to each node the attached text desc
+            //vis.selectAll(".label").filter(function (d) {return d.added;})
+                g.append("svg:text")
+                .attr("text-anchor", "middle").attr("dy", function (node) {
+                    return 4;
+                }).attr("dx", '0em').attr("class", "nodelabeltext").style("font-size", "16px").attr("fill", function (node) {
+                    return "green";
+                }).attr("opacity", 0.8).style("pointer-events", 'none')
+                .text(function (d) {
+                    return d.attr.type;
+                });
+            node.exit().transition().ease("elastic").remove();
+            link.exit().transition().ease("elastic").remove();
+            //activate it all - initiate the nodes and links
+            force.start();
+        }
+        function tick() {
+            node.attr("cx", function (d) {
+                return d.x = Math.max(r + 15, Math.min(w - r - 15, d.x));
+            })
+                .attr("cy", function (d) {
+                return d.y = Math.max(r + 15, Math.min(h - r - 15, d.y));
+            })
+                .attr("transform", function (d) {
+                return "translate(" + d.x + "," + d.y + ")";
+            });
+            link.attr("x1", function (d) {
+                return d.source.x;
+            })
+                .attr("y1", function (d) {
+                return d.source.y;
+            })
+                .attr("x2", function (d) {
+                return d.target.x;
+            })
+                .attr("y2", function (d) {
+                return d.target.y;
+            });
+        }
+        </script>
+    </body>
+</html>
