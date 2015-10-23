@@ -1,2 +1,0 @@
-# visualization-demo
-visualization demos
